@@ -10,13 +10,14 @@ Preparation = 14 hours.
 * Planning - 3 hours
 * Data choice/collection - 3 hours
 
-Base development = 3 hours.
+Base development = 13 hours.
 
 * Base api/conteinerization creation - 1 hour
+* Model usage/exploration - 1 hour
 * Base service (model call + output structuring) -
 * Cloud service (devops) -
 Final development = 3 hours.
-* Parsing/data segmentation - 6 hours
+* Parsing/data segmentation - 8 hours
 * Model training code -
 * Model training code in cloud (multi-gpu + cloud configuration)-
 * Base service (model call + output structuring) -
@@ -35,6 +36,7 @@ Final development = 3 hours.
 * [Newer control technique](https://aclanthology.org/2021.findings-emnlp.194.pdf)
 * [Simple gpt-2 with discriminator](https://bonkerfield.org/2020/02/combining-gpt-2-and-bert/s)
 * [Updated review in control techniques](https://lilianweng.github.io/lil-log/2021/01/02/controllable-neural-text-generation.html)
+* [Keywords to teXT, stanford project idea](https://web.stanford.edu/class/cs224n/reports/final_reports/report073.pdf)
 
 ### Planning
 
@@ -74,7 +76,7 @@ No training, just a prototype with a pre-trained model*.
 Request text inputs:
 
 1. Salutation, optional
-2. E-mail thone
+2. Tone
 3. Closing, optional
 4. From name, optional if closing is present
 5. Closing, optional if salutation is present
@@ -98,7 +100,7 @@ Request structure inputs:
 Request text inputs:
 
 * 1.n - Ordered subjects
-* 2 - Thone
+* 2 - Tone
 
 Subject would be created from the ordered subjects, closing and salutation would be created from the "To" and "Thone" fields and all the text body by the ordered subjects.
 
@@ -117,17 +119,31 @@ Needs to generate text in e-mail like format.
 #### Enron
 
 Choice of [Enron email dataset](https://www.cs.cmu.edu/~./enron/) for pre-training as it has a significant size ( > 500k emails and 1.4GB) and is more business oriented and has some [libraries](https://github.com/ZhaiResearchGroup/enron-parser) to parse it.
-**1 hour**: Choice of the parser. [E-mail segmentation parser](https://github.com/webis-de/acl20-crawling-mailing-lists),  it's not a easy-to-use neither will output an easy-to-use data, but it will segment all the e-mails and we **need** this feature in order to reduce our model to do specific tasks and to not generate too general gibberish.
+**1 hour**: Choice of the parser. [E-mail segmentation parser](https://aclanthology.org/2020.acl-main.108.pdf),  it's not a easy-to-use neither will output an easy-to-use data, but it would segment the e-mails in "salutations", "paragraph", and "closings" making easy to generate specific datasets.
 
-Parse + analyze data **6 hours**
+Parse + analyze data **8 hours**
 
 * Base parser: 2 hours
 * Remove duplicates, analyze data and order threads by sending time: 1.5 hours
-* Segment each e-mail: 2.5 hours
-  * The code with e-mail segmentation has a problem, it outputs "meta" with correct labeled data but with "text" field of an other entry.
-  * Using the parsed data the output generates the first entry correct and all the others with label [-1,0]. Tried to find quickly the problem but I didn't find it, and no time to explore better it. Therefore, the analysis will be done directly with the kaggle emails dataset (with duplicates and loosing subjects + threads). For this application it will not be so important.
+* Segment each e-mail: 4.5 hours - *Not worked*
+  * The code with e-mail segmentation has a problem to use it with the enron dataset (it has a code to parse the enron dataset and use it directly, but the results are inconsistent). Started to fix it but it would take a lot of time - it mix all the e-mails lines together.
+  
+Finally, I will use the e-mails in they "raw" form directly, finetuning the LGM to write e-mails, including the salutation and closing...I woul like to enphatise that segmenting the e-mails would be the best way to do it.
 
-### Training
+Group, labelize:
+
+### Model
+
+#### Processes
+
+**2 hour**
+gpt2/gpt-neo: Append labels and generate text after. Can use salutation, subject, closing as template and the tone too. (but this increases considerably the initial size and processing time, maybe better to break it in independtly parts)
+T5: Can create specific task like "Text about {subject}:" and the do like summarization.
+PPLM: "Equal" as gpt2 but uses a small model (already trained or trained by creating an aritificial dataset by classifying the e-mails using a large text classifier model). Hard to use for any subject, maybe use subject as input and small model to define only the tone.
+
+#### Prototype
+
+Without a custom dataset we can't use the salutation and the closing for generating the e-mail body, but we can quickly train an "inverse" summarizer model - just use some summarization dataset to train the model using the summary as input and the text to be summarized as output.
 
 [gpt2, gpt-neo, t5 for text classification](https://pasaentuciudad.com.mx/guide-to-fine-tuning-text-generation-models-gpt-2-gpt-neo-and-t5/)
 [optimize gpt-2 and t5 for nvidia](https://developer.nvidia.com/blog/optimizing-t5-and-gpt-2-for-real-time-inference-with-tensorrt/)
