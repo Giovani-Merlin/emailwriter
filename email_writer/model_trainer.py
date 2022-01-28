@@ -56,7 +56,8 @@ APEX_OPT_LEVEL = "O1"
 seed_everything(SEED)
 
 dataset = []
-with open("data/messages.jsonl") as f:
+data_path = "/content/drive/MyDrive/code/emailwriter/data/messages.jsonl"
+with open(data_path) as f:
     for line in f:
         dataset.append(json.loads(line)["message"])
 
@@ -172,7 +173,7 @@ for parameter in model.lm_head.parameters():
 
 
 training_args = TrainingArguments(
-    output_dir="./",
+    output_dir="/content/drive/MyDrive/code/emailwriter/models",
     num_train_epochs=EPOCHS,
     per_device_train_batch_size=TRAIN_BATCHSIZE,
     per_device_eval_batch_size=TRAIN_BATCHSIZE,
