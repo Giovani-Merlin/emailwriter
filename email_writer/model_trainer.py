@@ -52,7 +52,6 @@ UNFREEZE_LAST_N = 6
 SEED = 54321
 
 TRAIN_BATCHSIZE = 1
-BATCH_UPDATE = 16
 # fp16 only useful in batch_size > 8
 seed_everything(SEED)
 TOTAL_SIZE = 1000  # 20000
@@ -66,9 +65,10 @@ with open(data_path) as f:
             dataset.append(message)
 random.shuffle(dataset)
 dataset = dataset[:TOTAL_SIZE]
-train = dataset[: int(len(dataset) * TRAIN_SIZE)]
-test = dataset[int(len(dataset) * TRAIN_SIZE) :]
-warmup_steps = int(len(train) / TRAIN_BATCHSIZE * WARMUP_PROPORTION)
+TRAINING_SET_SIZE = int(len(dataset) * TRAIN_SIZE)
+train = dataset[:TRAINING_SET_SIZE]
+test = dataset[TRAINING_SET_SIZE:]
+warmup_steps = (TRAINING_SET_SIZE / TRAIN_BATCHSIZE) * WARMUP_PROPORTION * EPOCHS
 
 
 def get_tokenier(special_tokens=None):
@@ -184,16 +184,16 @@ training_args = TrainingArguments(
     per_device_train_batch_size=TRAIN_BATCHSIZE,
     per_device_eval_batch_size=TRAIN_BATCHSIZE,
     eval_accumulation_steps=10,
-    save_steps=int(TRAIN_BATCHSIZE) / 2,
+    save_steps=int(TRAINING_SET_SIZE / 2),
     evaluation_strategy="steps",
-    eval_steps=int(TRAIN_BATCHSIZE) / 2,
+    eval_steps=int(TRAINING_SET_SIZE / 2),
     warmup_steps=warmup_steps,
     learning_rate=LR,
     adam_epsilon=EPS,
     weight_decay=0.01,
     save_total_limit=1,
     load_best_model_at_end=True,
-    dataloader_num_workers=4,
+    dataloader_num_workers=2,
 )
 
 # ---------------------------------------------------#
