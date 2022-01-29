@@ -53,12 +53,12 @@ SEED = 54321
 
 TRAIN_BATCHSIZE = 1
 BATCH_UPDATE = 16
-APEX_OPT_LEVEL = "O1"
+# fp16 only useful in batch_size > 8
 seed_everything(SEED)
-TOTAL_SIZE = 20000
+TOTAL_SIZE = 1000  # 20000
 np
 dataset = []
-data_path = "/content/drive/MyDrive/code/emailwriter/data/messages.jsonl"
+data_path = "/content/drive/MyDrive/code/emailwriter/data/messages.jsonl"  # "data/messages.jsonl"
 with open(data_path) as f:
     for line in f:
         message = json.loads(line)["message"]
@@ -153,8 +153,9 @@ class EmailDataset(Dataset):
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
-model = AutoModelForPreTraining.from_pretrained(MODEL, output_hidden_states=False)
-model.cuda()
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = AutoModelForPreTraining.from_pretrained(MODEL, output_hidden_states=False).to(device)
 
 train_dataset = EmailDataset(train, tokenizer)
 val_dataset = EmailDataset(test, tokenizer, randomize=False)
@@ -182,16 +183,17 @@ training_args = TrainingArguments(
     num_train_epochs=EPOCHS,
     per_device_train_batch_size=TRAIN_BATCHSIZE,
     per_device_eval_batch_size=TRAIN_BATCHSIZE,
-    # gradient_accumulation_steps=BATCH_UPDATE,
-    evaluation_strategy="epoch",
-    # fp16=True,
-    # fp16_opt_level=APEX_OPT_LEVEL,
+    eval_accumulation_steps=10,
+    save_steps=int(TRAIN_BATCHSIZE) / 2,
+    evaluation_strategy="steps",
+    eval_steps=int(TRAIN_BATCHSIZE) / 2,
     warmup_steps=warmup_steps,
     learning_rate=LR,
     adam_epsilon=EPS,
     weight_decay=0.01,
     save_total_limit=1,
     load_best_model_at_end=True,
+    dataloader_num_workers=4,
 )
 
 # ---------------------------------------------------#
