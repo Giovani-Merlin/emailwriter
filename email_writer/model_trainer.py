@@ -61,7 +61,7 @@ dataset = []
 data_path = "/content/drive/MyDrive/code/emailwriter/data/messages.jsonl"  # "data/messages.jsonl"
 with open(data_path) as f:
     for line in f:
-        message = json.loads(line)["message"]
+        message = json.loads(line)["text"]
         if len(message.split()) > 15:
             dataset.append(message)
 random.shuffle(dataset)
