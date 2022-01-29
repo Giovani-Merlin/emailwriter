@@ -12,8 +12,8 @@ from transformers import (
     AutoTokenizer,
     AutoConfig,
     AutoModelForPreTraining,
-    TrainingArguments,
-    Trainer,
+    Seq2SeqTrainingArguments,
+    Seq2SeqTrainer,
 )
 from torch.utils.data import Dataset
 
@@ -34,6 +34,8 @@ def seed_everything(seed):
 
 
 MODEL = "gpt2-medium"
+# MODEL = "distilgpt2"
+# MODEL = "sshleifer/tiny-gpt2"
 SPECIAL_TOKENS = {
     "bos_token": "<|BOS|>",
     "eos_token": "<|EOS|>",
@@ -54,8 +56,7 @@ SEED = 54321
 TRAIN_BATCHSIZE = 1
 # fp16 only useful in batch_size > 8
 seed_everything(SEED)
-TOTAL_SIZE = 1000  # 20000
-np
+TOTAL_SIZE = 20000
 dataset = []
 data_path = "/content/drive/MyDrive/code/emailwriter/data/messages.jsonl"  # "data/messages.jsonl"
 with open(data_path) as f:
@@ -178,7 +179,7 @@ for parameter in model.lm_head.parameters():
     parameter.requires_grad = True
 
 
-training_args = TrainingArguments(
+training_args = Seq2SeqTrainingArguments(
     output_dir="/content/drive/MyDrive/code/emailwriter/models",
     num_train_epochs=EPOCHS,
     per_device_train_batch_size=TRAIN_BATCHSIZE,
@@ -197,7 +198,7 @@ training_args = TrainingArguments(
 )
 
 # ---------------------------------------------------#
-trainer = Trainer(
+trainer = Seq2SeqTrainer(
     model=model, args=training_args, train_dataset=train_dataset, eval_dataset=val_dataset, tokenizer=tokenizer
 )
 
