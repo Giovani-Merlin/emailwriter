@@ -44,7 +44,7 @@ SPECIAL_TOKENS = {
     "sep_token": "<|SEP|>",
 }
 MAXLEN = 768
-TRAIN_SIZE = 0.8
+TRAIN_SIZE = 0.9
 EPOCHS = 4
 LR = 5e-4
 EPS = 1e-8
