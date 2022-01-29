@@ -5,6 +5,7 @@ import os
 import json
 import numpy as np
 import random
+import random
 import torch
 import random
 from transformers import (
@@ -50,17 +51,21 @@ UNFREEZE_LAST_N = 6
 
 SEED = 54321
 
-TRAIN_BATCHSIZE = 16
+TRAIN_BATCHSIZE = 1
 BATCH_UPDATE = 16
 APEX_OPT_LEVEL = "O1"
 seed_everything(SEED)
-
+TOTAL_SIZE = 20000
+np
 dataset = []
 data_path = "/content/drive/MyDrive/code/emailwriter/data/messages.jsonl"
 with open(data_path) as f:
     for line in f:
-        dataset.append(json.loads(line)["message"])
-
+        message = json.loads(line)["message"]
+        if len(message.split()) > 15:
+            dataset.append(message)
+random.shuffle(dataset)
+dataset = dataset[:TOTAL_SIZE]
 train = dataset[: int(len(dataset) * TRAIN_SIZE)]
 test = dataset[int(len(dataset) * TRAIN_SIZE) :]
 warmup_steps = int(len(train) / TRAIN_BATCHSIZE * WARMUP_PROPORTION)
@@ -179,7 +184,6 @@ training_args = TrainingArguments(
     per_device_eval_batch_size=TRAIN_BATCHSIZE,
     # gradient_accumulation_steps=BATCH_UPDATE,
     evaluation_strategy="epoch",
-    save_strategy="epoch",
     # fp16=True,
     # fp16_opt_level=APEX_OPT_LEVEL,
     warmup_steps=warmup_steps,
