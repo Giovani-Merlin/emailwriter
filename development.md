@@ -22,13 +22,18 @@ Preparation = 14 hours.
 * Planning - 3 hours
 * Data choice/collection - 3 hours
 
-Base development = 17 hours.
+Base development = 22 hours.
 
 * Parsing/data segmentation - 8 hours
 * Model usage/exploration - 5 hours
 * Training code - 3 hours
 * Base api/conteinerization creation - 3 hours
+* Readme/documentation - 3 hours
 * Cloud service (devops) - X
+
+TOTAL: 36 hours
+
+## Research
 
 ## Research
 
@@ -78,6 +83,8 @@ In 3 we will use an objective field to define the tone of the e-mail (in practic
 #### Requirements
 
 ##### Prototype
+
+No training, just a prototype with a pre-trained model*.
 
 Request text inputs:
 
