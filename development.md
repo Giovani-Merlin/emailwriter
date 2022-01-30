@@ -2,6 +2,18 @@
 
 This markdown file aims to keep track of each step and the planning of the creation of such a repository, from the research stage of the problem to its implementation in a cloud system.
 
+## TLDR
+
+As I have already spent a lot of time on such a project, and I need to accomplish others tasks as well, I decided to finish such a project in x hours. Also, it's missing further post-processing as avoiding incomplete e-mails (sending it before "endoftext") and choosing the token count.
+
+I ended up investing a lot of time in researching generative text models and even more more in getting a good dataset. Unfortunately it was not possible to segment the emails in a timely manner, so it was not possible to get a dataset that was really suitable for this task.
+
+Using the salutation and the subject it is possible to create a coherent email, however, the model generates the finalization of the email as well (because it is trained to do such action), resulting in an email that does not writes the e-mail specific objective (closing). The solution clearly would be to have a ready-made dataset of just body of emails (or texts that we would like the email to look like) or to be able to segment the e-mails. Besides, it would be better to use an "insert" style models, using context on the left (opening) and final context (closing), but studying such models would take me much more time.
+
+Also, to use a model like pplm it is necessary to change their base code (because the model is loaded in each call of the script). Such a model would be ideal for the creation of emails, we could segment text into categories, such as "business", "positive", "conversation", "scheduling"," etc...And use such categories to guide the text generation (not excluding the ideas before).
+
+Finally, for such a project I just trained a gpt2 template on aeslc dataset customized in the form " subject + special token + prompt/generate text". The results are not satisfactory, but most of the findings and code used in this project serve as a basis for a better email generator.
+
 ## Total time
 
 Preparation = 14 hours.
@@ -10,17 +22,13 @@ Preparation = 14 hours.
 * Planning - 3 hours
 * Data choice/collection - 3 hours
 
-Base development = 13 hours.
+Base development = 17 hours.
 
-* Base api/conteinerization creation - 1 hour
-* Model usage/exploration - 1 hour
-* Base service (model call + output structuring) -
-* Cloud service (devops) -
-Final development = 3 hours.
 * Parsing/data segmentation - 8 hours
-* Model training code -
-* Model training code in cloud (multi-gpu + cloud configuration)-
-* Base service (model call + output structuring) -
+* Model usage/exploration - 5 hours
+* Training code - 3 hours
+* Base api/conteinerization creation - 3 hours
+* Cloud service (devops) - X
 
 ## Research
 
@@ -71,8 +79,6 @@ In 3 we will use an objective field to define the tone of the e-mail (in practic
 
 ##### Prototype
 
-No training, just a prototype with a pre-trained model*.
-
 Request text inputs:
 
 1. Salutation, optional
@@ -87,7 +93,7 @@ Request structure inputs:
 2. To
 3. Subject
 
-An e-mail can be seen as: "Salutation" + "E-mail body" (from subject) + "Closing". So, we can just map the "default" salutations and closings from one language (english in this project) and use a pre-trained model to write the body.
+An e-mail can be seen as: "Salutation" + "E-mail body" (from subject) + "Closing". So, we can just map the "default" salutations and closings from one language (english in this project) and use a fine-tuned model to write the body.
 
 ##### Main model
 
@@ -102,7 +108,7 @@ Request text inputs:
 * 1.n - Ordered subjects
 * 2 - Tone
 
-Subject would be created from the ordered subjects, closing and salutation would be created from the "To" and "Thone" fields and all the text body by the ordered subjects.
+Subject would be created from the ordered subjects, closing and salutation would be created from the "To" and "Tone" fields and all the text body by the ordered subjects. Salutation and tone infered from the subjects too.
 
 ## Data
 
@@ -128,7 +134,9 @@ Parse + analyze data **8 hours**
 * Segment each e-mail: 4.5 hours - *Not worked*
   * The code with e-mail segmentation has a problem to use it with the enron dataset (it has a code to parse the enron dataset and use it directly, but the results are inconsistent). Started to fix it but it would take a lot of time - it mix all the e-mails lines together.
   
-Finally, I will use the e-mails in they "raw" form directly, finetuning the LGM to write e-mails, including the salutation and closing...I woul like to enphatise that segmenting the e-mails would be the best way to do it.
+After further research I dosvered the [aeslc](https://huggingface.co/datasets/aeslc) dataset, which consists in parsed enron emails with the subject...
+
+Finally, I will use the e-mails in their "aeslc" form directly, finetuning the LGM to write e-mails, including the salutation and closing...I woul like to enphatise that segmenting the e-mails would be the best way to do it.
 
 Group, labelize:
 
@@ -136,16 +144,11 @@ Group, labelize:
 
 #### Processes
 
-**2 hour**
+**2 hours**
 gpt2/gpt-neo: Append labels and generate text after. Can use salutation, subject, closing as template and the tone too. (but this increases considerably the initial size and processing time, maybe better to break it in independtly parts)
 T5: Can create specific task like "Text about {subject}:" and the do like summarization.
 PPLM: "Equal" as gpt2 but uses a small model (already trained or trained by creating an aritificial dataset by classifying the e-mails using a large text classifier model). Hard to use for any subject, maybe use subject as input and small model to define only the tone.
 
-#### Prototype
+#### Training
 
-Without a custom dataset we can't use the salutation and the closing for generating the e-mail body, but we can quickly train an "inverse" summarizer model - just use some summarization dataset to train the model using the summary as input and the text to be summarized as output.
-
-[gpt2, gpt-neo, t5 for text classification](https://pasaentuciudad.com.mx/guide-to-fine-tuning-text-generation-models-gpt-2-gpt-neo-and-t5/)
 [optimize gpt-2 and t5 for nvidia](https://developer.nvidia.com/blog/optimizing-t5-and-gpt-2-for-real-time-inference-with-tensorrt/)
-
-### For later
