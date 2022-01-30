@@ -84,7 +84,6 @@ In 3 we will use an objective field to define the tone of the e-mail (in practic
 
 ##### Prototype
 
-No training, just a prototype with a pre-trained model*.
 
 Request text inputs:
 
