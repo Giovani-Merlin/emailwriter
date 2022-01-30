@@ -37,10 +37,6 @@ MODEL = "gpt2-medium"
 # MODEL = "distilgpt2"
 # MODEL = "sshleifer/tiny-gpt2"
 SPECIAL_TOKENS = {
-    "bos_token": "<|BOS|>",
-    "eos_token": "<|EOS|>",
-    "unk_token": "<|UNK|>",
-    "pad_token": "<|PAD|>",
     "sep_token": "<|SEP|>",
 }
 MAXLEN = 768
@@ -72,41 +68,21 @@ test = dataset[TRAINING_SET_SIZE:]
 warmup_steps = (TRAINING_SET_SIZE / TRAIN_BATCHSIZE) * WARMUP_PROPORTION * EPOCHS
 
 
-def get_tokenier(special_tokens=None):
-    tokenizer = AutoTokenizer.from_pretrained(MODEL)
-
-    if special_tokens:
-        tokenizer.add_special_tokens(special_tokens)
-        print("Special tokens added")
-    return tokenizer
-
-
-def get_model(tokenizer, special_tokens=None, load_model_path=None):
-
-    # GPT2LMHeadModel
-    if special_tokens:
-        config = AutoConfig.from_pretrained(
-            MODEL,
-            bos_token_id=tokenizer.bos_token_id,
-            eos_token_id=tokenizer.eos_token_id,
-            sep_token_id=tokenizer.sep_token_id,
-            pad_token_id=tokenizer.pad_token_id,
-            output_hidden_states=False,
-        )
-    else:
-        config = AutoConfig.from_pretrained(MODEL, pad_token_id=tokenizer.eos_token_id, output_hidden_states=False)
+def get_model(tokenizer, load_model_path=None):
 
     # ----------------------------------------------------------------#
+    config = AutoConfig.from_pretrained(
+        MODEL,
+        sep_token_id=tokenizer.sep_token_id,
+        output_hidden_states=False,
+    )
     model = AutoModelForPreTraining.from_pretrained(MODEL, config=config)
-
-    if special_tokens:
-        # Special tokens added, model needs to be resized accordingly
-        model.resize_token_embeddings(len(tokenizer))
+    # Special tokens added, model needs to be resized accordingly
+    model.resize_token_embeddings(len(tokenizer))
 
     if load_model_path:
         model.load_state_dict(torch.load(load_model_path))
 
-    model.cuda()
     return model
 
 
@@ -127,16 +103,6 @@ class EmailDataset(Dataset):
     def __getitem__(self, i):
         text = self.data[i]
 
-        # input = (
-        #     SPECIAL_TOKENS["bos_token"]
-        #     + self.title[i]
-        #     + SPECIAL_TOKENS["sep_token"]
-        #     + kw
-        #     + SPECIAL_TOKENS["sep_token"]
-        #     + self.text[i]
-        #     + SPECIAL_TOKENS["eos_token"]
-        # )
-
         encodings_dict = self.tokenizer(text, truncation=True, max_length=MAXLEN, padding="max_length")
 
         input_ids = encodings_dict["input_ids"]
@@ -152,6 +118,7 @@ class EmailDataset(Dataset):
 ########################################################################################################################
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
+tokenizer.add_special_tokens(SPECIAL_TOKENS)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
